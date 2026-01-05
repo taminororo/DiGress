@@ -11,6 +11,7 @@ hydra:
   run:
     dir: ../outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}-${general.name}
 
-
-
-
+trainer:
+  accelerator: mps
+  devices: 1
+  strategy: auto
