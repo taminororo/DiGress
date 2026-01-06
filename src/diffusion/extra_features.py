@@ -96,7 +96,11 @@ class EigenFeatures:
             return n_connected_comp.type_as(A), batch_eigenvalues.type_as(A)
 
         elif self.mode == 'all':
-            eigvals, eigvectors = torch.linalg.eigh(L)
+            #eigvals, eigvectors = torch.linalg.eigh(L)
+            L_cpu = L.cpu()
+            eigvals_cpu, eigvectors_cpu = torch.linalg.eigh(L_cpu)
+            eigvals = eigvals_cpu.to(L.device)
+            eigvectors = eigvectors_cpu.to(L.device)
             eigvals = eigvals.type_as(A) / torch.sum(mask, dim=1, keepdim=True)
             eigvectors = eigvectors * mask.unsqueeze(2) * mask.unsqueeze(1)
             # Retrieve eigenvalues features
@@ -169,7 +173,8 @@ def get_eigenvectors_features(vectors, node_mask, n_connected, k=2):
     # Add random value to the mask to prevent 0 from becoming the mode
     random = torch.randn(bs, n, device=node_mask.device) * (~node_mask)                                   # bs, n
     first_ev = first_ev + random
-    most_common = torch.mode(first_ev, dim=1).values                                    # values: bs -- indices: bs
+    #most_common = torch.mode(first_ev, dim=1).values                                    # values: bs -- indices: bs
+    most_common = torch.mode(first_ev.cpu(), dim=1).values.to(first_ev.device)
     mask = ~ (first_ev == most_common.unsqueeze(1))
     not_lcc_indicator = (mask * node_mask).unsqueeze(-1).float()
 
